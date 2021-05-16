@@ -21,7 +21,7 @@ build = {
 	type = "builtin",
 
     modules = {
-        dickens7-snowflake = {
+        ["dickens7-snowflake"] = {
             sources = { "src/main.c" }
         }
     },
