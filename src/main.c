@@ -45,13 +45,13 @@ static long get_til_next_millis(long last_timestamp) {
 
 static int luasnowflake_init(lua_State *L) {
     g_datacenter_id = luaL_checkint(L, 1);
-    if (g_datacenter_id < 0x00 || g_datacenter_id > 0x1f) {
-        return luaL_error(L, "datacenter_id must be an integer n, where 0 ≤ n ≤ 0x1f");
+    if (g_datacenter_id < 0x00 || g_datacenter_id > 0x7f) {
+        return luaL_error(L, "datacenter_id must be an integer n, where 0 ≤ n ≤ 0x7f");
     }
 
     g_node_id = luaL_checkint(L, 2);
-    if (g_node_id < 0x00 || g_node_id > 0x1f) {
-        return luaL_error(L, "node_id must be an integer n where 0 ≤ n ≤ 0x1f");
+    if (g_node_id < 0x00 || g_node_id > 0x7f) {
+        return luaL_error(L, "node_id must be an integer n where 0 ≤ n ≤ 0x7f");
     }
 
     initialized = true;
