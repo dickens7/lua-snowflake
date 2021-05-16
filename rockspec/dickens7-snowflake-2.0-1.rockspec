@@ -1,9 +1,9 @@
 package = "dickens7-snowflake"
-version = "1.0-1"
+version = "2.0-1"
 
 source = {
 	url = "git://github.com/dickens7/lua-snowflake.git",
-	tag = "v1.0",
+	tag = "v2.0",
 }
 
 description = {
