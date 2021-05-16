@@ -1,14 +1,14 @@
-package = "snowflake"
+package = "dickens7-snowflake"
 version = "1.0-1"
 
 source = {
-	url = "git://github.com/stuartcarnie/lua-snowflake.git",
+	url = "git://github.com/dickens7/lua-snowflake.git",
 	tag = "v1.0",
 }
 
 description = {
 	summary = "An implementation of a distributed ID generator, similar to Snowflake by Twitter",
-	homepage = "http://github.com/stuartcarnie/lua-snowflake",
+	homepage = "http://github.com/dickens7/lua-snowflake",
 	license = "MIT",
 	maintainer = "Stuart Carnie",
 }
@@ -21,7 +21,7 @@ build = {
 	type = "builtin",
 
     modules = {
-        snowflake = {
+        dickens7-snowflake = {
             sources = { "src/main.c" }
         }
     },
