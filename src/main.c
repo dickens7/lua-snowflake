@@ -15,12 +15,12 @@ static int g_node_id = 0;
 static long g_last_timestamp = -1;
 static int g_sequence = 0;
 
-// 2014-10-20T15:00:00Z
-#define SNOWFLAKE_EPOC 1413817200000L
+// 2021-01-01T00:00:00Z
+#define SNOWFLAKE_EPOC 1609430400000L
 
-#define NODE_ID_BITS 5
-#define DATACENTER_ID_BITS 5
-#define SEQUENCE_BITS 12
+#define NODE_ID_BITS 7
+#define DATACENTER_ID_BITS 7
+#define SEQUENCE_BITS 10
 #define NODE_ID_SHIFT SEQUENCE_BITS
 #define DATACENTER_ID_SHIFT (NODE_ID_SHIFT + NODE_ID_BITS)
 #define TIMESTAMP_SHIFT (DATACENTER_ID_SHIFT + DATACENTER_ID_BITS)
@@ -45,13 +45,13 @@ static long get_til_next_millis(long last_timestamp) {
 
 static int luasnowflake_init(lua_State *L) {
     g_datacenter_id = luaL_checkint(L, 1);
-    if (g_datacenter_id < 0x00 || g_datacenter_id > 0x1f) {
-        return luaL_error(L, "datacenter_id must be an integer n, where 0 ≤ n ≤ 0x1f");
+    if (g_datacenter_id < 0x00 || g_datacenter_id > 0x7f) {
+        return luaL_error(L, "datacenter_id must be an integer n, where 0 ≤ n ≤ 0x7f");
     }
 
     g_node_id = luaL_checkint(L, 2);
-    if (g_node_id < 0x00 || g_node_id > 0x1f) {
-        return luaL_error(L, "node_id must be an integer n where 0 ≤ n ≤ 0x1f");
+    if (g_node_id < 0x00 || g_node_id > 0x7f) {
+        return luaL_error(L, "node_id must be an integer n where 0 ≤ n ≤ 0x7f");
     }
 
     initialized = true;
