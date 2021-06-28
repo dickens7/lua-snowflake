@@ -2,6 +2,7 @@
 #include <lauxlib.h>
 #include <stdbool.h>
 #include <sys/time.h>
+#include <string.h>
 
 #if LUA_VERSION_NUM < 502
 #define luaL_newlib(L, l) (lua_newtable(L), luaL_register(L, NULL, l))
@@ -59,18 +60,6 @@ static long get_til_next_millis(long last_timestamp)
 
 static int luasnowflake_init(lua_State *L)
 {
-    g_datacenter_id = luaL_checkint(L, 1);
-    if (g_datacenter_id < 0x00 || g_datacenter_id > 0x7f)
-    {
-        return luaL_error(L, "datacenter_id must be an integer n, where 0 ≤ n ≤ 0x7f");
-    }
-
-    g_node_id = luaL_checkint(L, 2);
-    if (g_node_id < 0x00 || g_node_id > 0x7f)
-    {
-        return luaL_error(L, "node_id must be an integer n where 0 ≤ n ≤ 0x7f");
-    }
-
     conf.snowflake_epoc = luaL_optlong(L, 3, SNOWFLAKE_EPOC);
     conf.node_id_bits = luaL_optint(L, 4, NODE_ID_BITS);
     conf.datacenter_id_bits = luaL_optint(L, 5, DATACENTER_ID_BITS);
@@ -78,7 +67,19 @@ static int luasnowflake_init(lua_State *L)
 
     if ((conf.node_id_bits + conf.datacenter_id_bits + conf.sequence_bits) > 32)
     {
-        return luaL_error(L, "(node_id_bits + datacenter_id_bits + sequence_bits) cannot be greater than 0x32");
+        return luaL_error(L, "(node_id_bits + datacenter_id_bits + sequence_bits) cannot be greater than 32");
+    }
+
+    g_datacenter_id = luaL_checkint(L, 1);
+    if (g_datacenter_id < 0x00 || g_datacenter_id > (1 << conf.datacenter_id_bits))
+    {
+        return luaL_error(L, "datacenter_id must be an integer n, where 0 ≤ n ≤ %d", (1 << conf.datacenter_id_bits));
+    }
+
+    g_node_id = luaL_checkint(L, 2);
+    if (g_node_id < 0x00 || g_node_id > (1 << conf.node_id_bits))
+    {
+        return luaL_error(L, "node_id must be an integer n where 0 ≤ n ≤ %d", (1 << conf.node_id_bits));
     }
 
     conf.node_id_shift = conf.sequence_bits;
