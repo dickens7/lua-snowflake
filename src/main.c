@@ -42,8 +42,7 @@ static long get_timestamp() {
 
 static long get_til_next_millis(long last_timestamp) {
     long ts = get_timestamp();
-    while (ts < last_timestamp)
-    {
+    while (ts < last_timestamp) {
         ts = get_timestamp();
     }
 
@@ -100,23 +99,18 @@ static int luasnowflake_init(lua_State *L) {
 }
 
 static int luasnowflake_next_id(lua_State *L) {
-    if (!initialized)
-    {
+    if (!initialized) {
         return luaL_error(L, "snowflake.init must be called first");
     }
 
     long ts = get_timestamp();
 
-    if (g_last_timestamp == ts)
-    {
+    if (g_last_timestamp == ts) {
         g_sequence = (g_sequence + 1) & conf.sequence_mask;
-        if (g_sequence == 0)
-        {
+        if (g_sequence == 0) {
             ts = get_til_next_millis(g_last_timestamp);
         }
-    }
-    else
-    {
+    } else {
         g_sequence = 0;
     }
 
