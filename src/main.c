@@ -16,7 +16,7 @@ static long g_last_timestamp = -1;
 static int g_sequence = 0;
 
 // 2021-01-01T00:00:00Z
-#define SNOWFLAKE_EPOC 1609430400000L
+#define SNOWFLAKE_EPOC 1609459200000L
 
 #define NODE_ID_BITS 5
 #define DATACENTER_ID_BITS 5
