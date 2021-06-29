@@ -1,4 +1,4 @@
-package = "api7-snowflake"
+package = "snowflake"
 version = "2.1-0"
 
 source = {
