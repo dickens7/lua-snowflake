@@ -110,7 +110,10 @@ static int luasnowflake_next_id(lua_State *L) {
     }
 
     g_last_timestamp = ts;
-    ts = ((ts - conf.snowflake_epoc) << conf.timestamp_shift) | (g_datacenter_id << conf.datacenter_id_shift) | (g_node_id << conf.node_id_shift) | g_sequence;
+    ts = ((ts - conf.snowflake_epoc) << conf.timestamp_shift)
+            | (g_datacenter_id << conf.datacenter_id_shift)
+            | (g_node_id << conf.node_id_shift)
+            | g_sequence;
 
     char buffer[32];
     snprintf(buffer, 32, "%ld", ts);
