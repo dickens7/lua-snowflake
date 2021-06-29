@@ -52,24 +52,40 @@ static long get_til_next_millis(long last_timestamp) {
 
 static int luasnowflake_init(lua_State *L) {
     conf.snowflake_epoc = luaL_optlong(L, 3, SNOWFLAKE_EPOC);
-    conf.node_id_bits = luaL_optint(L, 4, NODE_ID_BITS);
-    conf.datacenter_id_bits = luaL_optint(L, 5, DATACENTER_ID_BITS);
-    conf.sequence_bits = luaL_optint(L, 6, SEQUENCE_BITS);
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    if (conf.snowflake_epoc < 0 || conf.snowflake_epoc > tv.tv_sec * 1000) {
+        char buffer[32];
+        snprintf(buffer, 32, "%ld", tv.tv_sec * 1000);
+        return luaL_error(L, "snowflake_epoc must be an long n where 1 ≤ n ≤ %s", buffer);
+    }
 
-    if ((conf.node_id_bits + conf.datacenter_id_bits + conf.sequence_bits) > 32)
-    {
-        return luaL_error(L, "(node_id_bits + datacenter_id_bits + sequence_bits) cannot be greater than 32");
+    conf.node_id_bits = luaL_optint(L, 4, NODE_ID_BITS);
+    if (conf.node_id_bits < 1) {
+        return luaL_error(L, "node_id_bits must be an integer n where ≥ 1");
+    }
+
+    conf.datacenter_id_bits = luaL_optint(L, 5, DATACENTER_ID_BITS);
+    if (conf.datacenter_id_bits < 1) {
+        return luaL_error(L, "datacenter_id_bits must be an integer n where ≥ 1");
+    }
+
+    conf.sequence_bits = luaL_optint(L, 6, SEQUENCE_BITS);
+    if (conf.sequence_bits < 1) {
+        return luaL_error(L, "sequence_bits must be an integer n where ≥ 1");
+    }
+
+    if ((conf.node_id_bits + conf.datacenter_id_bits + conf.sequence_bits) > 32) {
+        return luaL_error(L, "(node_id_bits + datacenter_id_bits + sequence_bits) cannot be > 32");
     }
 
     g_datacenter_id = luaL_checkint(L, 1);
-    if (g_datacenter_id < 0x00 || g_datacenter_id > (1 << conf.datacenter_id_bits))
-    {
+    if (g_datacenter_id < 0x00 || g_datacenter_id > (1 << conf.datacenter_id_bits)) {
         return luaL_error(L, "datacenter_id must be an integer n, where 0 ≤ n ≤ %d", (1 << conf.datacenter_id_bits));
     }
 
     g_node_id = luaL_checkint(L, 2);
-    if (g_node_id < 0x00 || g_node_id > (1 << conf.node_id_bits))
-    {
+    if (g_node_id < 0x00 || g_node_id > (1 << conf.node_id_bits)) {
         return luaL_error(L, "node_id must be an integer n where 0 ≤ n ≤ %d", (1 << conf.node_id_bits));
     }
 
