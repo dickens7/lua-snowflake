@@ -27,8 +27,7 @@ static int g_sequence = 0;
 
 #define SEQUENCE_MASK (0xffffffff ^ (0xffffffff << SEQUENCE_BITS))
 
-struct conf
-{
+struct conf {
     long snowflake_epoc;
     int node_id_bits;
     int datacenter_id_bits;
@@ -39,16 +38,14 @@ struct conf
     int sequence_mask;
 } conf;
 
-static long get_timestamp()
-{
+static long get_timestamp() {
     struct timeval tv;
     gettimeofday(&tv, NULL);
 
     return tv.tv_sec * 1000 + tv.tv_usec / 1000;
 }
 
-static long get_til_next_millis(long last_timestamp)
-{
+static long get_til_next_millis(long last_timestamp) {
     long ts = get_timestamp();
     while (ts < last_timestamp)
     {
@@ -58,8 +55,7 @@ static long get_til_next_millis(long last_timestamp)
     return ts;
 }
 
-static int luasnowflake_init(lua_State *L)
-{
+static int luasnowflake_init(lua_State *L) {
     conf.snowflake_epoc = luaL_optlong(L, 3, SNOWFLAKE_EPOC);
     conf.node_id_bits = luaL_optint(L, 4, NODE_ID_BITS);
     conf.datacenter_id_bits = luaL_optint(L, 5, DATACENTER_ID_BITS);
@@ -92,8 +88,7 @@ static int luasnowflake_init(lua_State *L)
     return 1;
 }
 
-static int luasnowflake_next_id(lua_State *L)
-{
+static int luasnowflake_next_id(lua_State *L) {
     if (!initialized)
     {
         return luaL_error(L, "snowflake.init must be called first");
@@ -130,8 +125,7 @@ static const struct luaL_Reg luasnowflake_lib[] = {
     {NULL, NULL},
 };
 
-LUALIB_API int luaopen_snowflake(lua_State *const L)
-{
+LUALIB_API int luaopen_snowflake(lua_State *const L) {
     luaL_newlib(L, luasnowflake_lib);
 
     return 1;
