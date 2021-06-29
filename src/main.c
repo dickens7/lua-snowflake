@@ -73,6 +73,7 @@ static int luasnowflake_init(lua_State *L) {
         return luaL_error(L, "sequence_bits must be an integer n where ≥ 1");
     }
 
+    // The timestamp >= 32 is because it is in milliseconds and only lasts 49 days when it equals 32 bits
     if ((conf.node_id_bits + conf.datacenter_id_bits + conf.sequence_bits) > 32) {
         return luaL_error(L, "(node_id_bits + datacenter_id_bits + sequence_bits) cannot be > 32");
     }
