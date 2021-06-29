@@ -79,13 +79,15 @@ static int luasnowflake_init(lua_State *L) {
     }
 
     g_datacenter_id = luaL_checkint(L, 1);
-    if (g_datacenter_id < 0x00 || g_datacenter_id > (1 << conf.datacenter_id_bits)) {
-        return luaL_error(L, "datacenter_id must be an integer n, where 0 ≤ n ≤ %d", (1 << conf.datacenter_id_bits));
+    int max_datacenter_id_bits = (1 << conf.datacenter_id_bits) - 1;
+    if (g_datacenter_id < 0x00 || g_datacenter_id > max_datacenter_id_bits) {
+        return luaL_error(L, "datacenter_id must be an integer n, where 0 ≤ n ≤ %d", max_datacenter_id_bits);
     }
 
     g_node_id = luaL_checkint(L, 2);
-    if (g_node_id < 0x00 || g_node_id > (1 << conf.node_id_bits)) {
-        return luaL_error(L, "node_id must be an integer n where 0 ≤ n ≤ %d", (1 << conf.node_id_bits));
+    int max_node_id_bits = (1 << conf.node_id_bits) -1;
+    if (g_node_id < 0x00 || g_node_id > max_node_id_bits) {
+        return luaL_error(L, "node_id must be an integer n where 0 ≤ n ≤ %d", max_node_id_bits;
     }
 
     conf.node_id_shift = conf.sequence_bits;
