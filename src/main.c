@@ -21,11 +21,6 @@ static int g_sequence = 0;
 #define NODE_ID_BITS 5
 #define DATACENTER_ID_BITS 5
 #define SEQUENCE_BITS 12
-#define NODE_ID_SHIFT SEQUENCE_BITS
-#define DATACENTER_ID_SHIFT (NODE_ID_SHIFT + NODE_ID_BITS)
-#define TIMESTAMP_SHIFT (DATACENTER_ID_SHIFT + DATACENTER_ID_BITS)
-
-#define SEQUENCE_MASK (0xffffffff ^ (0xffffffff << SEQUENCE_BITS))
 
 struct conf {
     long snowflake_epoc;
