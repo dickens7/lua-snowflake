@@ -1,4 +1,4 @@
-package = "snowflake"
+package = "api7-snowflake"
 version = "2.0-1"
 
 source = {
@@ -19,7 +19,6 @@ dependencies = {
 
 build = {
 	type = "builtin",
-
     modules = {
         ["snowflake"] = {
             sources = { "src/main.c" }
