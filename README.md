@@ -33,8 +33,8 @@ where default
 
 `sf.init(datacenter_id, node_id, snowflake_epoc, node_id_bits, datacenter_id_bits, sequence_bits)` is used to initialize snowflake and set values for ddddd and nnnnn as follows:
 
-* `datacenter_id` is an integer n, where 0 ≤ n ≤ (1 << datacenter_id_bits) and specifies the `ddddd` portion of the id
-* `node_id` is an integer n, where 0 ≤ n ≤ (1 << node_id_bits) and specifies the `nnnnn` portion of the id
+* `datacenter_id` is an integer n, where 0 ≤ n < (1 << datacenter_id_bits) and specifies the `ddddd` portion of the id
+* `node_id` is an integer n, where 0 ≤ n < (1 << node_id_bits) and specifies the `nnnnn` portion of the id
 * `snowflake_epoc` is an integer n, the starting timestamp is expressed in milliseconds
 * `node_id_bits` is an integer n, representing the node within a given data center
 * `datacenter_id_bits` is an integer n, representing a unique data center or group of servers
