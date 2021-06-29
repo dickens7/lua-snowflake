@@ -7,4 +7,4 @@ include(lua)
 
 include_directories(${LUA_INCLUDE_DIR})
 
-add_lua_module(api7-snowflake src/main.c)
+add_lua_module(snowflake src/main.c)
