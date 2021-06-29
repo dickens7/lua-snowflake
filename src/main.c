@@ -2,7 +2,6 @@
 #include <lauxlib.h>
 #include <stdbool.h>
 #include <sys/time.h>
-#include <string.h>
 
 #if LUA_VERSION_NUM < 502
 #define luaL_newlib(L, l) (lua_newtable(L), luaL_register(L, NULL, l))
@@ -87,7 +86,7 @@ static int luasnowflake_init(lua_State *L) {
     g_node_id = luaL_checkint(L, 2);
     int max_node_id_bits = (1 << conf.node_id_bits) -1;
     if (g_node_id < 0x00 || g_node_id > max_node_id_bits) {
-        return luaL_error(L, "node_id must be an integer n where 0 ≤ n ≤ %d", max_node_id_bits;
+        return luaL_error(L, "node_id must be an integer n where 0 ≤ n ≤ %d", max_node_id_bits) ;
     }
 
     conf.node_id_shift = conf.sequence_bits;
