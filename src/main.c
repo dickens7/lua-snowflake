@@ -3,9 +3,8 @@
 #include <stdbool.h>
 #include <sys/time.h>
 
-
 #if LUA_VERSION_NUM < 502
-#define luaL_newlib(L, l) ( lua_newtable( L ), luaL_register( L, NULL, l ) )
+#define luaL_newlib(L, l) (lua_newtable(L), luaL_register(L, NULL, l))
 #endif
 
 static bool initialized = false;
@@ -15,17 +14,23 @@ static int g_node_id = 0;
 static long g_last_timestamp = -1;
 static int g_sequence = 0;
 
-// 2014-10-20T15:00:00Z
-#define SNOWFLAKE_EPOC 1413817200000L
+// 2021-01-01T00:00:00Z
+#define SNOWFLAKE_EPOC 1609459200000L
 
 #define NODE_ID_BITS 5
 #define DATACENTER_ID_BITS 5
 #define SEQUENCE_BITS 12
-#define NODE_ID_SHIFT SEQUENCE_BITS
-#define DATACENTER_ID_SHIFT (NODE_ID_SHIFT + NODE_ID_BITS)
-#define TIMESTAMP_SHIFT (DATACENTER_ID_SHIFT + DATACENTER_ID_BITS)
 
-#define SEQUENCE_MASK (0xffffffff ^ (0xffffffff << SEQUENCE_BITS))
+struct conf {
+    long snowflake_epoc;
+    int node_id_bits;
+    int datacenter_id_bits;
+    int sequence_bits;
+    int node_id_shift;
+    int datacenter_id_shift;
+    int timestamp_shift;
+    int sequence_mask;
+} conf;
 
 static long get_timestamp() {
     struct timeval tv;
@@ -44,15 +49,51 @@ static long get_til_next_millis(long last_timestamp) {
 }
 
 static int luasnowflake_init(lua_State *L) {
+    conf.snowflake_epoc = luaL_optlong(L, 3, SNOWFLAKE_EPOC);
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    if (conf.snowflake_epoc < 0 || conf.snowflake_epoc > tv.tv_sec * 1000) {
+        char buffer[32];
+        snprintf(buffer, 32, "%ld", tv.tv_sec * 1000);
+        return luaL_error(L, "snowflake_epoc must be an long n where 1 ≤ n ≤ %s", buffer);
+    }
+
+    conf.node_id_bits = luaL_optint(L, 4, NODE_ID_BITS);
+    if (conf.node_id_bits < 1) {
+        return luaL_error(L, "node_id_bits must be an integer n where ≥ 1");
+    }
+
+    conf.datacenter_id_bits = luaL_optint(L, 5, DATACENTER_ID_BITS);
+    if (conf.datacenter_id_bits < 1) {
+        return luaL_error(L, "datacenter_id_bits must be an integer n where ≥ 1");
+    }
+
+    conf.sequence_bits = luaL_optint(L, 6, SEQUENCE_BITS);
+    if (conf.sequence_bits < 1) {
+        return luaL_error(L, "sequence_bits must be an integer n where ≥ 1");
+    }
+
+    // The timestamp >= 32 is because it is in milliseconds and only lasts 49 days when it equals 32 bits
+    if ((conf.node_id_bits + conf.datacenter_id_bits + conf.sequence_bits) > 32) {
+        return luaL_error(L, "(node_id_bits + datacenter_id_bits + sequence_bits) cannot be > 32");
+    }
+
     g_datacenter_id = luaL_checkint(L, 1);
-    if (g_datacenter_id < 0x00 || g_datacenter_id > 0x1f) {
-        return luaL_error(L, "datacenter_id must be an integer n, where 0 ≤ n ≤ 0x1f");
+    int max_datacenter_id_bits = (1 << conf.datacenter_id_bits) - 1;
+    if (g_datacenter_id < 0x00 || g_datacenter_id > max_datacenter_id_bits) {
+        return luaL_error(L, "datacenter_id must be an integer n, where 0 ≤ n ≤ %d", max_datacenter_id_bits);
     }
 
     g_node_id = luaL_checkint(L, 2);
-    if (g_node_id < 0x00 || g_node_id > 0x1f) {
-        return luaL_error(L, "node_id must be an integer n where 0 ≤ n ≤ 0x1f");
+    int max_node_id_bits = (1 << conf.node_id_bits) -1;
+    if (g_node_id < 0x00 || g_node_id > max_node_id_bits) {
+        return luaL_error(L, "node_id must be an integer n where 0 ≤ n ≤ %d", max_node_id_bits) ;
     }
+
+    conf.node_id_shift = conf.sequence_bits;
+    conf.datacenter_id_shift = (conf.node_id_shift + conf.node_id_bits);
+    conf.timestamp_shift = (conf.datacenter_id_shift + conf.datacenter_id_bits);
+    conf.sequence_mask = (0xffffffff ^ (0xffffffff << conf.sequence_bits));
 
     initialized = true;
 
@@ -67,7 +108,7 @@ static int luasnowflake_next_id(lua_State *L) {
     long ts = get_timestamp();
 
     if (g_last_timestamp == ts) {
-        g_sequence = (g_sequence + 1) & SEQUENCE_MASK;
+        g_sequence = (g_sequence + 1) & conf.sequence_mask;
         if (g_sequence == 0) {
             ts = get_til_next_millis(g_last_timestamp);
         }
@@ -76,9 +117,9 @@ static int luasnowflake_next_id(lua_State *L) {
     }
 
     g_last_timestamp = ts;
-    ts = ((ts - SNOWFLAKE_EPOC) << TIMESTAMP_SHIFT)
-            | (g_datacenter_id << DATACENTER_ID_SHIFT)
-            | (g_node_id << NODE_ID_SHIFT)
+    ts = ((ts - conf.snowflake_epoc) << conf.timestamp_shift)
+            | (g_datacenter_id << conf.datacenter_id_shift)
+            | (g_node_id << conf.node_id_shift)
             | g_sequence;
 
     char buffer[32];
@@ -89,9 +130,9 @@ static int luasnowflake_next_id(lua_State *L) {
 }
 
 static const struct luaL_Reg luasnowflake_lib[] = {
-        {"init", luasnowflake_init},
-        {"next_id", luasnowflake_next_id},
-        {NULL, NULL},
+    {"init", luasnowflake_init},
+    {"next_id", luasnowflake_next_id},
+    {NULL, NULL},
 };
 
 LUALIB_API int luaopen_snowflake(lua_State *const L) {
