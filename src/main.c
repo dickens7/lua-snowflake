@@ -20,6 +20,7 @@ static int g_sequence = 0;
 #define NODE_ID_BITS 5
 #define DATACENTER_ID_BITS 5
 #define SEQUENCE_BITS 12
+#define DELTA_OFFSET 1
 
 struct conf {
     long snowflake_epoc;
@@ -30,12 +31,23 @@ struct conf {
     int datacenter_id_shift;
     int timestamp_shift;
     int sequence_mask;
+    int delta_offset;
 } conf;
 
 static long get_timestamp() {
     struct timeval tv;
     gettimeofday(&tv, NULL);
-
+    switch (conf.delta_offset)
+    {
+        case 1000:
+            return tv.tv_sec;
+        case 100:
+            return tv.tv_sec * 10 + tv.tv_usec / 100000;
+        case 10:
+            return tv.tv_sec * 100 + tv.tv_usec / 10000;
+        case 1:
+            return tv.tv_sec * 1000 + tv.tv_usec / 1000;
+    }
     return tv.tv_sec * 1000 + tv.tv_usec / 1000;
 }
 
@@ -73,10 +85,19 @@ static int luasnowflake_init(lua_State *L) {
         return luaL_error(L, "sequence_bits must be an integer n where ≥ 1");
     }
 
-    // The timestamp >= 32 is because it is in milliseconds and only lasts 49 days when it equals 32 bits
-    if ((conf.node_id_bits + conf.datacenter_id_bits + conf.sequence_bits) > 32) {
-        return luaL_error(L, "(node_id_bits + datacenter_id_bits + sequence_bits) cannot be > 32");
+    conf.delta_offset = luaL_optint(L, 7, DELTA_OFFSET);
+    switch (conf.delta_offset)
+    {
+        case 1000:
+        case 100:
+        case 10:
+        case 1:
+            break;
+        default: 
+            return luaL_error(L, "does not support delta_offset: %d", conf.delta_offset);
     }
+
+    conf.snowflake_epoc = conf.snowflake_epoc / conf.delta_offset;
 
     g_datacenter_id = luaL_checkint(L, 1);
     int max_datacenter_id_bits = (1 << conf.datacenter_id_bits) - 1;
