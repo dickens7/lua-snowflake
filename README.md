@@ -29,7 +29,7 @@ where default
 * `n` is a 5-bit integer representing the node within a given data center
 * `d` is a 5-bit integer representing a unique data center or group of servers
 * `t` is a 42-bit integer representing the current timestamp in milliseconds
-    * the number of milliseconds to have elapsed since 1609459200000 or 2021-01-01T00:00:00.000Z
+    * the number of milliseconds to have elapsed since 1413817200000 or 2014-10-20T15:00:00.000Z
 
 `sf.init(datacenter_id, node_id, snowflake_epoc, node_id_bits, datacenter_id_bits, sequence_bits, delta_offset)` is used to initialize snowflake and set values for ddddd and nnnnn as follows:
 

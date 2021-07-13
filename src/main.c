@@ -2,6 +2,7 @@
 #include <lauxlib.h>
 #include <stdbool.h>
 #include <sys/time.h>
+#include <math.h>
 
 #if LUA_VERSION_NUM < 502
 #define luaL_newlib(L, l) (lua_newtable(L), luaL_register(L, NULL, l))
@@ -39,14 +40,14 @@ static long get_timestamp() {
     gettimeofday(&tv, NULL);
     switch (conf.delta_offset)
     {
-        case 1000:
-            return tv.tv_sec;
-        case 100:
-            return tv.tv_sec * 10 + tv.tv_usec / 100000;
-        case 10:
-            return tv.tv_sec * 100 + tv.tv_usec / 10000;
-        case 1:
-            return tv.tv_sec * 1000 + tv.tv_usec / 1000;
+    case 1000:
+        return tv.tv_sec;
+    case 100:
+        return tv.tv_sec * 10 + tv.tv_usec / 100000;
+    case 10:
+        return tv.tv_sec * 100 + tv.tv_usec / 10000;
+    case 1:
+        return tv.tv_sec * 1000 + tv.tv_usec / 1000;
     }
     return tv.tv_sec * 1000 + tv.tv_usec / 1000;
 }
@@ -88,13 +89,13 @@ static int luasnowflake_init(lua_State *L) {
     conf.delta_offset = luaL_optint(L, 7, DELTA_OFFSET);
     switch (conf.delta_offset)
     {
-        case 1000:
-        case 100:
-        case 10:
-        case 1:
-            break;
-        default: 
-            return luaL_error(L, "does not support delta_offset: %d", conf.delta_offset);
+    case 1000:
+    case 100:
+    case 10:
+    case 1:
+        break;
+    default:
+        return luaL_error(L, "does not support delta_offset: %d", conf.delta_offset);
     }
 
     conf.snowflake_epoc = conf.snowflake_epoc / conf.delta_offset;
@@ -150,9 +151,30 @@ static int luasnowflake_next_id(lua_State *L) {
     return 1;
 }
 
+static int bit_split(lua_State *L) {
+    long snow_id = luaL_checklong(L, 1);
+    long sequence = snow_id & ((long)1 << conf.sequence_bits) - 1;
+    long data_machine_and = ((long)1 << (conf.node_id_bits + conf.datacenter_id_bits)) - 1;
+    long data_machine_id = (snow_id >> conf.sequence_bits) & data_machine_and;
+    int max = conf.sequence_bits + conf.node_id_bits + conf.datacenter_id_bits;
+    long delta_offset_and = ((long)1 << (64 - max)) - 1;
+    long delta_offset = (snow_id >> max) & delta_offset_and;
+    char buffer[32];
+    snprintf(buffer, 32, "%ld, %ld, %ld", data_machine_id, delta_offset, sequence);
+    lua_pushstring(L, buffer);
+    return 1;
+}
+
+static int getmillisecond(lua_State *L) {
+    lua_pushnumber(L, get_timestamp());
+    return 1;
+}
+
 static const struct luaL_Reg luasnowflake_lib[] = {
     {"init", luasnowflake_init},
     {"next_id", luasnowflake_next_id},
+    {"getmillisecond", getmillisecond},
+    {"bit_split", bit_split},
     {NULL, NULL},
 };
 
