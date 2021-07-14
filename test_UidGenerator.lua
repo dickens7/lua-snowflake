@@ -30,5 +30,5 @@ function sleep(n)
 end
 
 sf.init(0x0, 0x1, 1609459200000, 11, 11, 13, 1000)
-check(sf, 1609459200000)
+check(sf, 1609459200)
 print("success\n")

@@ -11,15 +11,16 @@ local function check (sf ,start)
     local last_offset
     while( a>0 )
     do
-        local offset = sf.getmillisecond() - start
         local id = sf.next_id()
+        local offset = sf.getmillisecond() - start
         if last_offset ~= offset then
             i = 0
         end
         local result =  sf.bit_split(id)
         if ("1, "..offset..", " .. i ~= result) then
             print("result:" .. result)
-            print("1, "..offset..", " .. i)
+            print("offset:" .. offset)
+            print("\n1, "..offset..", " .. i)
         end
         sleep(0.02)
         last_offset = offset
