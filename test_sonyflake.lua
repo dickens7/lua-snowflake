@@ -10,14 +10,28 @@ function sleep(n)
  end
 
 sf.init(0x0, 0x1, 1609459200000, 8, 8, 8, 10)
-local a=10
-while( a>0 )
-do
-    local snow_id = sf.next_id()
-    local offset = sf.getmillisecond() - 160945920000
-    local result =  sf.bit_split(snow_id)
-    print("result:" .. result)
-    print("offset:" .. offset)
-    sleep(0.01)
-    a = a-1
+local function check (sf ,start)
+    local a = 1000
+    local i = 0
+    local last_offset
+    while( a>0 )
+    do
+        local offset = sf.getmillisecond() - start
+        local id = sf.next_id()
+        if last_offset ~= offset then
+            i = 0
+        end
+        local result =  sf.bit_split(id)
+        if ("1, "..offset..", " .. i ~= result) then
+            print("result:" .. result)
+            print("offset:" .. offset)
+            print("\n1, "..offset..", " .. i)
+        end
+        sleep(0.02)
+        last_offset = offset
+        a = a-1
+        i = i+1
+    end
 end
+check(sf, 160945920000)
+print("success\n")

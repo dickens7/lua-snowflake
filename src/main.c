@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <sys/time.h>
 #include <math.h>
+#include <stdlib.h>
 
 #if LUA_VERSION_NUM < 502
 #define luaL_newlib(L, l) (lua_newtable(L), luaL_register(L, NULL, l))
@@ -152,7 +153,8 @@ static int luasnowflake_next_id(lua_State *L) {
 }
 
 static int bit_split(lua_State *L) {
-    long snow_id = luaL_checklong(L, 1);
+    const char* snow_id_str = luaL_checkstring(L, 1);
+    long int snow_id = atol(snow_id_str);
     long sequence = snow_id & ((long)1 << conf.sequence_bits) - 1;
     long data_machine_and = ((long)1 << (conf.node_id_bits + conf.datacenter_id_bits)) - 1;
     long data_machine_id = (snow_id >> conf.sequence_bits) & data_machine_and;
